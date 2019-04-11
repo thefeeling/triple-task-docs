@@ -1,4 +1,4 @@
-> 과제 내용인 `포인트적립API` 와 `포인트조회API`에 대한 FLOW를 작업하다보니 Plantuml Sequence Diagram을 사용하게 되었습니다. 폰트 렌더링이 원활하지 않아 우선 index.html에서 보실 수 있도록 급하게 조치는 해놨습니다. 불편하시더라도 clone 후 index.html을 봐주시면 감사하겠습니다.
+> 과제 내용인 `포인트 적립 API` 와 `포인트 조회 API`에 대한 FLOW를 작업하다 보니 Plantuml Sequence Diagram을 사용하게 되었습니다. 사용 중인 컴퓨터 폰트 이슈로 인해 마크다운으로 현재 원활하게 한글 렌더링이 되질 않아 우선 index.html에서 보실 수 있도록 급하게 조치는 해놨습니다. 불편하시더라도 clone 후 index.html을 봐주시면 감사하겠습니다.
 
 # 트리플여행자 클럽 마일리지 서비스
 ## 데이터베이스
