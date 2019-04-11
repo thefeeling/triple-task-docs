@@ -1,5 +1,6 @@
-# 트리플여행자 클럽 마일리지 서비스
+> 과제 내용인 `포인트적립API` 와 `포인트조회API`에 대한 FLOW를 작업하다보니 Plantuml Sequence Diagram을 사용하게 되었습니다. 폰트 렌더링이 원활하지 않아 우선 index.html에서 보실 수 있도록 급하게 조치는 해놨습니다. 불편하시더라도 clone 후 index.html을 봐주시면 감사하겠습니다.
 
+# 트리플여행자 클럽 마일리지 서비스
 ## 데이터베이스
 ![database](./database.png)
 - MySQL 5.7 기준
@@ -20,6 +21,7 @@
   - 포인트에 대한 이력 데이터 Insert(포인트 적립/수정/삭제)
   - 리뷰로 지급 받은 포인트 대한 이력 추적을 위한 히스토리 성격의 데이터 Insert
 - 처리 시 발생하는 예외 케이스에 대해서는 HTTP STATUS 4XX/5XX를 반환
+
 
 ```puml
 skinparam ParticipantPadding 20
