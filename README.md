@@ -1,3 +1,5 @@
+> 수정[2019.05.07]: [링크](./history.md) 참고
+
 > 과제 내용인 `포인트 적립 API` 와 `포인트 조회 API`에 대한 FLOW를 작업하다 보니 Plantuml Sequence Diagram을 사용하게 되었습니다. 사용 중인 컴퓨터 폰트 이슈로 인해 마크다운으로 현재 원활하게 한글 렌더링이 되질 않아 우선 index.html에서 보실 수 있도록 급하게 조치는 해놨습니다. 불편하시더라도 clone 후 index.html을 봐주시면 감사하겠습니다.
 
 # 트리플여행자 클럽 마일리지 서비스
@@ -59,9 +61,9 @@ box EVENT_API
 	activate UserService
 	UserService -> UserRepository: userRepository.countById(id: UUID): Long
 	alt 존재하지 않은 유저일 경우
-		UserService --> ServiceAPI: HTTP/1.1 400 BadRequest
+		UserService --> ServiceAPI: HTTP/1.1 401 Unauthorized
 	else 데이터베이스 조회 중 에러가 발생 했을 경우
-		UserService --> ServiceAPI: HTTP/1.1 500 ServiceUnavailable
+		UserService --> ServiceAPI: HTTP/1.1 503 ServiceUnavailable
 	end
 	deactivate UserService
 
@@ -70,18 +72,18 @@ box EVENT_API
 	EventController -> PointService: processPoints()
 	activate PointService
 
-	PointService <-> PointPolicyRepository: 포인트 지급 정책 조회\n - reviewPolicyRepository.findByType(type: ReviewPolicyType): List<ReviewPolicy>\n - 정책 테이블에 존재하는 지급 금액을 기준으로 포인트 지급 진행
+	PointService <-> PointPolicyRepository: 포인트 지급 정책 조회\n - pointPolicyRepository.findByType(type: PolicyType): List<PointPolicy>\n - 정책 테이블에 존재하는 지급 금액을 기준으로 포인트 지급 진행
 	alt 지급 정책 데이터가 존재하지 않을 경우
 		PointService --> ServiceAPI: HTTP/1.1 400 BadRequest
 	else 데이터베이스 조회 중 에러가 발생 했을 경우
-		PointService --> ServiceAPI: HTTP/1.1 500 ServiceUnavailable
+		PointService --> ServiceAPI: HTTP/1.1 503 ServiceUnavailable
 	end
 
 	PointService <-> ReviewRepository: 장소별 회원 리뷰 조회\n - reviewRepository.countByPlaceIdAndUserId(placeId: UUID, userId: UUID) : Long
 	alt 데이터가 존재하지 않을 경우
 		PointService --> ServiceAPI: HTTP/1.1 404 Not Found
 	else 데이터베이스 조회 중 에러가 발생 했을 경우
-		PointService --> ServiceAPI: HTTP/1.1 500 ServiceUnavailable
+		PointService --> ServiceAPI: HTTP/1.1 503 ServiceUnavailable
 	end	
 
 
@@ -96,7 +98,7 @@ box EVENT_API
 	end
 
 	alt 장소별 최초 지급 정책이 존재하는 경우
-		PointService <-> ReviewRepository: 장소별 최초 작성 유무 체크\n - reviewRepository.findTopOne(placeId: UUID) : Review\n - placeId를 기준, 리뷰 작성일 역순 정렬로 테이블의 Top 1의 엔티티를 조회
+		PointService <-> ReviewRepository: 장소별 최초 작성 유무 체크\n - reviewRepository.findTopOne(placeId: UUID) : Review\n - placeId를 기준, 리뷰 작성일 기준 테이블의 TopOne의 엔티티를 조회
 		alt 조회한 엔티티의 userId와 요청 본문의 userId가 같을 경우
 			PointService -> PointService : Point() 엔티티 생성
 		end		
@@ -105,7 +107,7 @@ box EVENT_API
 
 	PointService <-> PointRepository: Point 이력 데이터 save \n -pointRepository.saveAll(points: List<Point>)
 	
-	PointService <-> ReviewPointRepository: 리뷰 포인트 이력 데이터 Insert\n - reviewPointRepository.insert(ReviewPoint)\n - 리뷰 작성에 따른 구체적인 지급 내역을 컬럼에 JSON Serialize 한 후 반영\n - serialize하는 데이터에 point를 참조 할 수 있는 ID 데이터를 포함한다.
+	PointService <-> ReviewPointRepository: 리뷰 포인트 이력 데이터 Insert\n - reviewPointRepository.insert(ReviewPoint)\n - 리뷰 작성에 따른 구체적인 지급 내역을 컬럼(`content`)에 JSON Serialize 한 후 반영\n - serialize하는 데이터에 point를 참조 할 수 있는 ID 데이터를 포함한다.
 	
 	PointService <-> PointRepository: Point 집계 데이터 조회\n - pointRepository.getAmountSumByUserId(userId: UUID): Long
 
@@ -129,16 +131,16 @@ box EVENT_API
 	alt 데이터가 존재하지 않을 경우
 		PointService --> ServiceAPI: HTTP/1.1 404 Not Found
 	else 데이터베이스 조회 중 에러가 발생 했을 경우
-		PointService --> ServiceAPI: HTTP/1.1 500 ServiceUnavailable
+		PointService --> ServiceAPI: HTTP/1.1 503 ServiceUnavailable
 	end
 
 	PointService <-> UserPointRepository: 리뷰를 통하여 지급 받은 잔여 포인트 존재 유무 조회\n - userPointRepository.getAvailableReviewPoint(userId: UUID): Long	
 
-	PointService <-> PointPolicyRepository: 리뷰 이미지 첨부 포인트 지급 정책 조회\n - reviewPolicyRepository.findByType(type: ReviewPolicyType): List<ReviewPolicy>\n - 정책 테이블에 존재하는 지급 금액을 기준으로 포인트 지급/차감 진행
+	PointService <-> PointPolicyRepository: 포인트 지급 정책 조회\n - pointPolicyRepository.findByType(type: PolicyType): List<ReviewPolicy>\n - 정책 테이블에 존재하는 지급 금액을 기준으로 포인트 지급/차감 진행
 	alt 지급 정책 데이터가 존재하지 않을 경우
 		PointService --> ServiceAPI: HTTP/1.1 400 BadRequest
 	else 데이터베이스 조회 중 에러가 발생 했을 경우
-		PointService --> ServiceAPI: HTTP/1.1 500 ServiceUnavailable
+		PointService --> ServiceAPI: HTTP/1.1 503 ServiceUnavailable
 	end
 
 	PointService <-> ReviewPointRepository: 리뷰 포인트 이력 데이터 조회\n - reviewPointRepository.findOneByReviewIdOrderByCreateAtDesc(reviewId: UUID): ReviewPoint\n - 구체적인 지급 내역을 JSON deserialize
@@ -158,9 +160,17 @@ box EVENT_API
 		end 
 	end
 
+	alt 장소별 최초 지급 이력이 없음 && 장소별 최초 지급 정책이 존재하는 경우
+		PointService <-> ReviewRepository: 장소별 최초 작성 유무 체크\n - reviewRepository.findTopOne(placeId: UUID) : Review\n - placeId를 기준, 리뷰 작성일 기준 테이블의 TopOne의 엔티티를 조회
+		alt 조회한 엔티티의 userId와 요청 본문의 userId가 같을 경우
+			PointService -> PointService : Point() 엔티티 생성
+		end		
+	end
+
+
 	PointService <-> PointRepository: Point 이력 데이터 save \n -pointRepository.saveAll(points: List<Point>)\n - 이미지 첨부가 빠져서 생기는 차감의 경우 최초 지급 내역의 PointId를 OriginalId에 저장하여 이력 보관
 	
-	PointService <-> ReviewPointRepository: 리뷰 포인트 이력 데이터 Insert\n - reviewPointRepository.insert(ReviewPoint)\n - 리뷰 수정에 따른 구체적인 지급/차감 내역을 컬럼에 JSON Serialize 한 후 반영, point 엔티티의 ID 값을 포함해야 한다.
+	PointService <-> ReviewPointRepository: 리뷰 포인트 이력 데이터 Insert\n - reviewPointRepository.insert(ReviewPoint)\n - 리뷰 수정에 따른 구체적인 지급/차감 내역을 컬럼(`content`)에 JSON Serialize 한 후 반영, point 엔티티의 ID 값을 포함해야 한다.
 	
 	PointService <-> PointRepository: Point 집계 데이터 조회\n - pointRepository.getAmountSumByUserId(userId: UUID): Long
 
@@ -181,14 +191,14 @@ box EVENT_API
 	alt 잔여 포인트가 존재하지 않을 경우
 		PointService --> ServiceAPI: HTTP/1.1 400 BadRequest
 	else 데이터베이스 조회 중 에러가 발생 했을 경우
-		PointService --> ServiceAPI: HTTP/1.1 500 ServiceUnavailable
+		PointService --> ServiceAPI: HTTP/1.1 503 ServiceUnavailable
 	end	
 
 	PointService <-> ReviewRepository: 장소별 회원 리뷰 조회\n - reviewRepository.countByPlaceIdAndUserId(placeId: UUID, userId: UUID) : Long
 	alt 데이터가 존재하지 않을 경우
 		PointService --> ServiceAPI: HTTP/1.1 404 Not Found
 	else 데이터베이스 조회 중 에러가 발생 했을 경우
-		PointService --> ServiceAPI: HTTP/1.1 500 ServiceUnavailable
+		PointService --> ServiceAPI: HTTP/1.1 503 ServiceUnavailable
 	end
 
 	PointService <-> ReviewPointRepository: 리뷰 포인트 이력 데이터 조회\n - reviewPointRepository.findOneByReviewIdOrderByCreateAtDesc(reviewId: UUID): ReviewPoint\n - 구체적인 지급 내역을 JSON deserialize
@@ -204,7 +214,7 @@ box EVENT_API
 
 	PointService <-> PointRepository: Point 이력 데이터 save \n -pointRepository.saveAll(points: List<Point>)\n - 최초 지급 내역의 PointId를 OriginalId에 저장하여 이력 보관\n - 리뷰 삭제에 따른 차감 이력 추가
 	
-	PointService <-> ReviewPointRepository: 리뷰 포인트 이력 데이터 Insert\n - reviewPointRepository.insert(ReviewPoint)\n - 구체적인 차감 이력을 컬럼에 JSON Serialize 한 후 반영
+	PointService <-> ReviewPointRepository: 리뷰 포인트 이력 데이터 Insert\n - reviewPointRepository.save(ReviewPoint)\n - 구체적인 차감 이력을 컬럼에 JSON Serialize 한 후 반영
 	
 	PointService <-> PointRepository: Point 집계 데이터 조회\n - pointRepository.getAmountSumByUserId(userId: UUID): Long
 
